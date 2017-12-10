@@ -16,7 +16,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AddTaskActivity"></activity>
+        <activity
+            android:name=".AddTaskActivity"
+            android:parentActivityName="com.dinkapach.android.todolist.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.dinkapach.android.todolist.MainActivity"/>
+        </activity>
     </application>
 
 </manifest>

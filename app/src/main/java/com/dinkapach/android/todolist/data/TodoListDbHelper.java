@@ -21,8 +21,8 @@ public class TodoListDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_TODOLIST_TABLE =
                 "CREATE TABLE " + TodoListContract.TaskEntry.TABLE_NAME + " (" +
                 TodoListContract.TaskEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                TodoListContract.TaskEntry.COLUMN_NAME_TITLE + " TEXT NOT NULL," +
-                ");";
+                TodoListContract.TaskEntry.COLUMN_NAME_TITLE + " TEXT NOT NULL" +
+                "); ";
 
         sqLiteDatabase.execSQL(SQL_CREATE_TODOLIST_TABLE);
     }

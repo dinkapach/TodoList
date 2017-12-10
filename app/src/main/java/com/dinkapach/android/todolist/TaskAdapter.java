@@ -1,9 +1,14 @@
 package com.dinkapach.android.todolist;
 
+import android.content.Context;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.dinkapach.android.todolist.data.TodoListContract;
 
 /**
  * Created by Din on 12/9/2017.
@@ -11,29 +16,54 @@ import android.widget.TextView;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskAdapterViewHolder> {
 
-    private String[] mTaskData;
+    private final Context mContext;
+    private Cursor mCursor;
+
+    public TaskAdapter(Context context, Cursor cursor){
+        mContext = context;
+        mCursor = cursor;
+    }
 
     @Override
     public TaskAdapter.TaskAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return null;
+        LayoutInflater inflater = LayoutInflater.from(mContext);
+        boolean shouldAttachToRoot = false;
+        View view = inflater.inflate(R.layout.task_view, parent, shouldAttachToRoot);
+        return new TaskAdapterViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(TaskAdapterViewHolder holder, int position) {
+        if (!mCursor.moveToPosition(position)){
+            return;
+        }
 
+        String title = mCursor.getString(mCursor.getColumnIndex(TodoListContract.TaskEntry.COLUMN_NAME_TITLE));
+        long id = mCursor.getLong(mCursor.getColumnIndex(TodoListContract.TaskEntry._ID));
+        holder.itemView.setTag(id);
+        holder.mTaskTitleTextView.setText(title);
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return mCursor.getCount();
+    }
+
+    public void swapCursor(Cursor newCursor){
+        if (mCursor != null){
+            mCursor.close();
+        }
+        mCursor = newCursor;
+        if (mCursor != null){
+            this.notifyDataSetChanged();
+        }
     }
 
     public class TaskAdapterViewHolder extends RecyclerView.ViewHolder{
-        public final TextView mTaskTitleTextView, mTaskDateTextView;
+        public final TextView mTaskTitleTextView;
 
         public TaskAdapterViewHolder(View itemView) {
             super(itemView);
-            mTaskDateTextView = itemView.findViewById(R.id.tv_list_task_item_due_date);
             mTaskTitleTextView = itemView.findViewById(R.id.tv_list_task_item_title);
         }
     }
