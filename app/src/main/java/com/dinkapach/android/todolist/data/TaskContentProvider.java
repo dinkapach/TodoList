@@ -47,11 +47,27 @@ public class TaskContentProvider extends ContentProvider {
             case TASKS:
                 returnCursor = getAllTasks(columns, selection, selectionArgs, sortOrder);
                 break;
+            case TASK_WITH_ID:
+                String taskId = uri.getLastPathSegment();
+                returnCursor = getTask(taskId, columns, sortOrder);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri " + uri);
         }
         returnCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return returnCursor;
+    }
+
+    private Cursor getTask(String taskId, String[] columns, String sortOrder) {
+        final SQLiteDatabase db = mTodoListDbHelper.getReadableDatabase();
+        return db.query(
+                TodoListContract.TaskEntry.TABLE_NAME,
+                columns,
+                TodoListContract.TaskEntry._ID + "=?",
+                new String[]{taskId},
+                null,
+                null,
+                sortOrder);
     }
 
     private Cursor getAllTasks(@Nullable String[] columns, @Nullable String selection,
@@ -109,8 +125,8 @@ public class TaskContentProvider extends ContentProvider {
         int deletedTasksCount;
         switch (match){
             case TASK_WITH_ID:
-                String id = uri.getPathSegments().get(1);
-                deletedTasksCount = deleteTaskWithId(id);
+                String id = uri.getLastPathSegment();
+                deletedTasksCount = deleteTask(id);
                 break;
             case TASKS:
             default:
@@ -123,15 +139,30 @@ public class TaskContentProvider extends ContentProvider {
         return deletedTasksCount;
     }
 
-    private int deleteTaskWithId(String id){
+    private int deleteTask(String taskId){
         final SQLiteDatabase db = mTodoListDbHelper.getWritableDatabase();
         return db.delete(TodoListContract.TaskEntry.TABLE_NAME,
-                "_id=?",
-                new String[]{id});
+                TodoListContract.TaskEntry._ID + "=?",
+                new String[]{taskId});
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {
-        return 0;
+        int match = sUriMatcher.match(uri);
+        final SQLiteDatabase db = mTodoListDbHelper.getWritableDatabase();
+        int rowsUpdated;
+        switch (match){
+            case TASK_WITH_ID:
+                rowsUpdated = db.update(
+                        TodoListContract.TaskEntry.TABLE_NAME,
+                        contentValues,
+                        s,
+                        strings
+                );
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown uri " + uri);
+        }
+        return rowsUpdated;
     }
 }

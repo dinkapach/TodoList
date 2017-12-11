@@ -1,5 +1,6 @@
 package com.dinkapach.android.todolist;
 
+import android.net.Uri;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.content.Intent;
@@ -15,10 +16,11 @@ import android.view.View;
 import com.dinkapach.android.todolist.data.TodoListContract;
 
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+        TaskAdapter.TaskAdapterOnClickHandler{
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int TASK_LOADER_ID = 1;
+    private static final int TASKS_LOADER_ID = 1;
     private TaskAdapter mTaskAdapter;
     private RecyclerView mTaskListRecyclerView;
 
@@ -30,10 +32,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mTaskListRecyclerView = findViewById(R.id.rv_all_task_list);
         mTaskListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mTaskAdapter = new TaskAdapter(this);
+        mTaskAdapter = new TaskAdapter(this, this);
         mTaskListRecyclerView.setAdapter(mTaskAdapter);
         createItemTouchHelper();
-        getSupportLoaderManager().initLoader(TASK_LOADER_ID, null, this);
+        getSupportLoaderManager().initLoader(TASKS_LOADER_ID, null, this);
     }
 
     @Override
@@ -80,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private void restartTaskLoader(){
         Log.d(TAG, "restartTaskLoader");
-        getSupportLoaderManager().restartLoader(TASK_LOADER_ID, null, this);
+        getSupportLoaderManager().restartLoader(TASKS_LOADER_ID, null, this);
     }
 
     @Override
@@ -133,20 +135,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mTaskAdapter.swapCursor(null);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()){
-//            case R.id.action_refresh:
-//                mTaskAdapter.swapCursor(getAllTasks());
-//                return true;
-//            default:
-//                return super.onOptionsItemSelected(item);
-//        }
-//    }
+    //on click task item
+    @Override
+    public void onClick(long taskId) {
+        Intent intentToStartAddTaskActivity =
+                new Intent(MainActivity.this, AddTaskActivity.class);
+        Uri uriForTaskClicked = TodoListContract.TaskEntry.buildUriWithId(taskId);
+        intentToStartAddTaskActivity.setData(uriForTaskClicked);
+        startActivity(intentToStartAddTaskActivity);
+    }
 }

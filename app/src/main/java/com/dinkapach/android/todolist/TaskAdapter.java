@@ -17,10 +17,16 @@ import com.dinkapach.android.todolist.data.TodoListContract;
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskAdapterViewHolder> {
 
     private final Context mContext;
+    private final TaskAdapterOnClickHandler mClickHandler;
     private Cursor mCursor;
 
-    public TaskAdapter(Context context){
+    public TaskAdapter(Context context, TaskAdapterOnClickHandler clickHandler){
         mContext = context;
+        mClickHandler = clickHandler;
+    }
+
+    public interface TaskAdapterOnClickHandler{
+        void onClick(long taskId);
     }
 
     @Override
@@ -58,12 +64,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskAdapterVie
         }
     }
 
-    public class TaskAdapterViewHolder extends RecyclerView.ViewHolder{
+    public class TaskAdapterViewHolder extends RecyclerView.ViewHolder implements
+            View.OnClickListener{
         public final TextView mTaskTitleTextView;
 
         public TaskAdapterViewHolder(View itemView) {
             super(itemView);
             mTaskTitleTextView = itemView.findViewById(R.id.tv_list_task_item_title);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int adapterPosition = getAdapterPosition();
+            mCursor.moveToPosition(adapterPosition);
+            long taskId = mCursor.getLong(mCursor.getColumnIndex(TodoListContract.TaskEntry._ID));
+            mClickHandler.onClick(taskId);
         }
     }
 }
