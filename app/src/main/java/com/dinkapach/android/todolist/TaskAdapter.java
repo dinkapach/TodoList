@@ -19,9 +19,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskAdapterVie
     private final Context mContext;
     private Cursor mCursor;
 
-    public TaskAdapter(Context context, Cursor cursor){
+    public TaskAdapter(Context context){
         mContext = context;
-        mCursor = cursor;
     }
 
     @Override
@@ -46,7 +45,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskAdapterVie
 
     @Override
     public int getItemCount() {
-        return mCursor.getCount();
+        return (mCursor == null) ? 0 : mCursor.getCount();
     }
 
     public void swapCursor(Cursor newCursor){

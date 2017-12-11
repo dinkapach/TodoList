@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class TodoListDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "todolist.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public TodoListDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

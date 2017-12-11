@@ -1,24 +1,25 @@
 package com.dinkapach.android.todolist;
 
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
-
 import com.dinkapach.android.todolist.data.TodoListContract;
-import com.dinkapach.android.todolist.data.TodoListDbHelper;
 
-public class MainActivity extends AppCompatActivity {
 
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int TASK_LOADER_ID = 1;
     private TaskAdapter mTaskAdapter;
-    private SQLiteDatabase mDb;
     private RecyclerView mTaskListRecyclerView;
 
     @Override
@@ -29,19 +30,16 @@ public class MainActivity extends AppCompatActivity {
         mTaskListRecyclerView = findViewById(R.id.rv_all_task_list);
         mTaskListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        TodoListDbHelper dbHelper = new TodoListDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
-
-        Cursor cursor = getAllTasks();
-        mTaskAdapter = new TaskAdapter(this, cursor);
+        mTaskAdapter = new TaskAdapter(this);
         mTaskListRecyclerView.setAdapter(mTaskAdapter);
         createItemTouchHelper();
+        getSupportLoaderManager().initLoader(TASK_LOADER_ID, null, this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshCursor();
+        restartTaskLoader();
     }
 
     private void createItemTouchHelper(){
@@ -57,28 +55,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 long id = (long) viewHolder.itemView.getTag();
-                if(removeTask(id)) {
-                    refreshCursor();
+                if(deleteTask(id)) {
+                    restartTaskLoader();
                 }
             }
         }).attachToRecyclerView(mTaskListRecyclerView);
     }
 
-    private Cursor getAllTasks(){
-        return mDb.query(
-                TodoListContract.TaskEntry.TABLE_NAME,
+    private boolean deleteTask(long id){
+        return getContentResolver().delete(
+                TodoListContract.TaskEntry.buildUriWithId(id),
                 null,
-                null,
-                null,
-                null,
-                null,
-                null);
-    }
-
-    private boolean removeTask(long id){
-        return mDb.delete(
-                TodoListContract.TaskEntry.TABLE_NAME,
-                TodoListContract.TaskEntry._ID + "=" + id,
                 null) > 0;
     }
 
@@ -91,8 +78,59 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intentToStartAddTaskActivity);
     }
 
-    private void refreshCursor(){
-        mTaskAdapter.swapCursor(getAllTasks());
+    private void restartTaskLoader(){
+        Log.d(TAG, "restartTaskLoader");
+        getSupportLoaderManager().restartLoader(TASK_LOADER_ID, null, this);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle loaderArgs) {
+        return new AsyncTaskLoader<Cursor>(this) {
+            Cursor mTaskData = null;
+
+            @Override
+            protected void onStartLoading() {
+                if(mTaskData != null){
+                    deliverResult(mTaskData);
+                } else {
+                    forceLoad();
+                }
+            }
+
+            @Override
+            public void deliverResult(Cursor data) {
+                mTaskData = data;
+                super.deliverResult(data);
+            }
+
+            @Override
+            public Cursor loadInBackground() {
+                Log.d(TAG, "loadInBackground");
+                try {
+                    return getContentResolver().query(
+                            TodoListContract.TaskEntry.CONTENT_URI,
+                            null,
+                            null,
+                            null,
+                            null
+                    );
+                } catch (Exception e){
+                    Log.e(TAG, "Failed to load tasks");
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mTaskAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mTaskAdapter.swapCursor(null);
     }
 
 //    @Override

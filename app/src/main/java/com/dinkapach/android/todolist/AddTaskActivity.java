@@ -2,8 +2,10 @@ package com.dinkapach.android.todolist;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
@@ -12,8 +14,8 @@ import com.dinkapach.android.todolist.data.TodoListDbHelper;
 
 public class AddTaskActivity extends AppCompatActivity {
 
+    private static final String TAG = AddTaskActivity.class.getSimpleName();
     private EditText mTaskTitleEditText;
-    private SQLiteDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,9 +23,6 @@ public class AddTaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_task);
         initViewComponents();
 
-        //create db helper
-        TodoListDbHelper dbHelper = new TodoListDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
     }
 
     private void initViewComponents(){
@@ -36,9 +35,10 @@ public class AddTaskActivity extends AppCompatActivity {
         finish();
     }
 
-    private long addNewTask(String title){
-        ContentValues cv = new ContentValues();
-        cv.put(TodoListContract.TaskEntry.COLUMN_NAME_TITLE, title);
-        return mDb.insert(TodoListContract.TaskEntry.TABLE_NAME, null, cv);
+    private void addNewTask(String title){
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TodoListContract.TaskEntry.COLUMN_NAME_TITLE, title);
+        Uri uri = getContentResolver().insert(TodoListContract.TaskEntry.CONTENT_URI, contentValues);
+        Log.d(TAG, "added new task: " + uri);
     }
 }
